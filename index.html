@@ -230,7 +230,7 @@
   </svg>
 </button>
 
-<div id="yt-player" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;"></div>
+<audio id="bg-audio" src="music.mp3" loop preload="auto"></audio>
 
 <div class="progress-bar-wrap">
   <div class="progress-bar" id="pbar"></div>
@@ -521,64 +521,26 @@
   }, { passive: true });
 
   /* ── MUSIC ── */
-  var ytPlayer = null;
+  var audio = document.getElementById('bg-audio');
   var isMuted = false;
-  var playerReady = false;
-  var pendingPlay = false;
   var audioStarted = false;
 
-  // Inject YouTube IFrame API dynamically
-  (function() {
-    var tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    document.head.appendChild(tag);
-  })();
-
-  function onYouTubeIframeAPIReady() {
-    ytPlayer = new YT.Player('yt-player', {
-      videoId: '8-eNdHn9uRE',
-      playerVars: { autoplay: 0, loop: 1, playlist: '8-eNdHn9uRE', controls: 0, mute: 0, playsinline: 1 },
-      events: {
-        onReady: function(e) {
-          playerReady = true;
-          e.target.setVolume(50);
-          if (pendingPlay) { e.target.playVideo(); pendingPlay = false; }
-        },
-        onStateChange: function(e) {
-          if (e.data === YT.PlayerState.ENDED) ytPlayer.playVideo();
-        }
-      }
-    });
-  }
+  audio.volume = 0.5;
 
   function startAudio() {
     if (audioStarted) return;
     audioStarted = true;
-    if (!playerReady) { pendingPlay = true; return; }
-    ytPlayer.unMute();
-    ytPlayer.setVolume(50);
-    ytPlayer.playVideo();
+    audio.play().catch(function() {});
   }
 
-  ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(function(ev) {
-    document.addEventListener(ev, function handler() {
-      startAudio();
-      document.removeEventListener(ev, handler);
-    }, { passive: true });
-  });
+  document.addEventListener('pointerdown', function handler() {
+    startAudio();
+    document.removeEventListener('pointerdown', handler);
+  }, { passive: true });
 
   function toggleMusic() {
     isMuted = !isMuted;
-    if (ytPlayer && playerReady) {
-      if (isMuted) {
-        ytPlayer.mute();
-      } else {
-        ytPlayer.unMute();
-        ytPlayer.setVolume(50);
-        var state = ytPlayer.getPlayerState();
-        if (state !== 1) ytPlayer.playVideo();
-      }
-    }
+    audio.muted = isMuted;
     document.getElementById('icon-on').style.display  = isMuted ? 'none'  : 'block';
     document.getElementById('icon-off').style.display = isMuted ? 'block' : 'none';
   }
