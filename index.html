@@ -466,65 +466,44 @@
 </a>
 
 <script>
-  /* ── PAGES ── */
-  let cur = 0, animating = false;
-  const PAGES   = ['page1','page2','page3'].map(id => document.getElementById(id));
-  const DOTS    = ['d0','d1','d2'].map(id => document.getElementById(id));
-  const btnPrev = document.getElementById('btn-prev');
-  const btnNext = document.getElementById('btn-next');
-  const pbar    = document.getElementById('pbar');
-  const DURATION = 12000;
+ /* ── PAGES ── */
+let cur = 0, animating = false;
+const PAGES   = ['page1','page2','page3'].map(id => document.getElementById(id));
+const DOTS    = ['d0','d1','d2'].map(id => document.getElementById(id));
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+const pbar    = document.getElementById('pbar');
+const DURATION = 12000;
 
-  function render() {
-    DOTS.forEach((d, i) => d.classList.toggle('on', i === cur));
-    btnPrev.disabled = cur === 0;
-    btnNext.disabled = cur === PAGES.length - 1;
-    PAGES.forEach((p, i) => {
-      if (i < cur) {
-        p.classList.add('turned');
-        p.style.zIndex = 10 - i;
-      } else if (i === cur) {
-        p.classList.remove('turned');
-        p.style.zIndex = 30 - i;
-      } else {
-        p.classList.remove('turned');
-        p.style.zIndex = 20 - i;
-      }
-    });
-  }
+function render() {
+  DOTS.forEach((d, i) => d.classList.toggle('on', i === cur));
+  btnPrev.disabled = cur === 0;
+  btnNext.disabled = cur === PAGES.length - 1;
 
-  function goTo(n) {
-    if (animating) return;
-    animating = true;
-    cur = n;
-    render();
-    setTimeout(() => { animating = false; }, 950);
-  }
+  PAGES.forEach((p, i) => {
+    if (i < cur) {
+      p.classList.add('turned');
+      p.style.zIndex = 10 - i;
+    } else if (i === cur) {
+      p.classList.remove('turned');
+      p.style.zIndex = 30 - i;
+    } else {
+      p.classList.remove('turned');
+      p.style.zIndex = 20 - i;
+    }
+  });
+} 
 
-  function nextPage() { if (cur < PAGES.length - 1) goTo(cur + 1); }
-  function prevPage() { if (cur > 0) goTo(cur - 1); }
+function goTo(n) {
+  if (animating) return;
+  animating = true;
+  cur = n;
+  render();
+  setTimeout(() => { animating = false; }, 950);
+}
 
-  let autoTimer = null;
-  function startAuto() {
-    clearAuto();
-    pbar.style.transition = 'none';
-    pbar.style.width = '0%';
-    pbar.offsetWidth;
-    pbar.style.transition = `width ${DURATION}ms linear`;
-    pbar.style.width = '100%';
-    autoTimer = setTimeout(() => {
-      if (cur < PAGES.length - 1) { nextPage(); startAuto(); }
-      else { setTimeout(() => { goTo(0); startAuto(); }, 1200); }
-    }, DURATION);
-  }
-  function clearAuto() {
-    clearTimeout(autoTimer);
-    pbar.style.transition = 'none';
-    pbar.style.width = '0%';
-  }
-  function manualNext() { clearAuto(); nextPage(); startAuto(); }
-  function manualPrev() { clearAuto(); prevPage(); startAuto(); }
-  window.addEventListener('load', () => setTimeout(startAuto, 900));
+function nextPage() { if (cur < PAGES.length - 1) goTo(cur + 1); }
+function prevPage() { if (cur > 0) goTo(cur - 1); }
 
   /* ── SWIPE ── */
   const book = document.getElementById('book');
@@ -541,23 +520,33 @@
   }, { passive: true });
 
   /* ── MUSIC ── */
+  const player  = document.getElementById('yt-player');
   const iconOn  = document.getElementById('icon-on');
   const iconOff = document.getElementById('icon-off');
   let isMuted = false, audioStarted = false;
 
+ function toggleMusic() {
+  isMuted = !isMuted;
+  if (ytPlayer) isMuted ? ytPlayer.mute() : ytPlayer.unMute();
+  iconOn.style.display  = isMuted ? 'none'  : 'block';
+  iconOff.style.display = isMuted ? 'block' : 'none';
+}
+
   function startAudio() {
-    if (audioStarted) return;
-    audioStarted = true;
-    if (ytPlayer) { ytPlayer.unMute(); ytPlayer.setVolume(50); ytPlayer.playVideo(); }
-  }
+  if (audioStarted) return;
+  audioStarted = true;
+  if (ytPlayer) { ytPlayer.unMute(); ytPlayer.setVolume(50); ytPlayer.playVideo(); }
+}
 
   document.addEventListener('pointerdown', startAudio, { once: true, passive: true });
   document.addEventListener('touchstart',  startAudio, { once: true, passive: true });
   document.addEventListener('click',       startAudio, { once: true });
+  player.addEventListener('load', () => setTimeout(startAudio, 800));
 
   function toggleMusic() {
     isMuted = !isMuted;
-    if (ytPlayer) isMuted ? ytPlayer.mute() : ytPlayer.unMute();
+    sendYT(isMuted ? 'mute' : 'unMute');
+    if (!isMuted) sendYT('setVolume', [35]);
     iconOn.style.display  = isMuted ? 'none'  : 'block';
     iconOff.style.display = isMuted ? 'block' : 'none';
   }
@@ -590,16 +579,19 @@
       canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
       const ctx = canvas.getContext('2d');
       const w = W * 2, h = H * 2;
+
       const base = ctx.createLinearGradient(0, 0, w, 0);
       base.addColorStop(0.00, '#6b3a1c'); base.addColorStop(0.08, '#4a2410');
       base.addColorStop(0.25, '#321508'); base.addColorStop(0.55, '#1e0c04');
       base.addColorStop(0.80, '#160903'); base.addColorStop(1.00, '#0e0602');
       ctx.fillStyle = base; ctx.fillRect(0, 0, w, h);
+
       const tonal = ctx.createLinearGradient(0, 0, 0, h);
       tonal.addColorStop(0.00, 'rgba(120,60,20,0.22)'); tonal.addColorStop(0.12, 'rgba(0,0,0,0)');
       tonal.addColorStop(0.50, 'rgba(0,0,0,0.08)'); tonal.addColorStop(0.88, 'rgba(0,0,0,0)');
       tonal.addColorStop(1.00, 'rgba(100,50,15,0.18)');
       ctx.fillStyle = tonal; ctx.fillRect(0, 0, w, h);
+
       for (let y = 0; y < h; y += 9) {
         const a = 0.012 + Math.random() * 0.018;
         ctx.fillStyle = `rgba(255,200,120,${a})`; ctx.fillRect(0, y, w, 1);
@@ -610,6 +602,7 @@
         ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2);
         ctx.fillStyle = Math.random()>0.55 ? `rgba(0,0,0,${a})` : `rgba(255,180,80,${a*0.5})`; ctx.fill();
       }
+
       [0.20, 0.80].forEach(pos => {
         const ry = h*pos, ribH = 10;
         const rg = ctx.createLinearGradient(0,ry-ribH/2,0,ry+ribH/2);
@@ -620,10 +613,12 @@
         ctx.strokeStyle='rgba(184,150,78,0.15)';
         ctx.beginPath(); ctx.moveTo(0,ry+2); ctx.lineTo(w,ry+2); ctx.stroke();
       });
+
       ctx.strokeStyle='rgba(184,150,78,0.45)'; ctx.lineWidth=1.5;
       ctx.beginPath(); ctx.moveTo(8,0); ctx.lineTo(8,h); ctx.stroke();
       ctx.strokeStyle='rgba(184,150,78,0.18)'; ctx.lineWidth=1;
       ctx.beginPath(); ctx.moveTo(13,0); ctx.lineTo(13,h); ctx.stroke();
+
       ['top','bottom'].forEach(pos => {
         const bandH=14, y0=pos==='top'?0:h-bandH;
         const grad=ctx.createLinearGradient(0,y0,w,y0);
@@ -638,6 +633,7 @@
         sh.addColorStop(0,'rgba(0,0,0,0.45)'); sh.addColorStop(1,'rgba(0,0,0,0)');
         ctx.fillStyle=sh; ctx.fillRect(0,pos==='top'?y0+bandH:y0-6,w,6);
       });
+
       const spec=ctx.createLinearGradient(0,0,18,0);
       spec.addColorStop(0,'rgba(255,200,130,0.14)'); spec.addColorStop(0.4,'rgba(255,200,130,0.06)'); spec.addColorStop(1,'rgba(255,200,130,0)');
       ctx.fillStyle=spec; ctx.fillRect(0,0,18,h);
