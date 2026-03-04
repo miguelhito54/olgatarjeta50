@@ -8,7 +8,7 @@
   <meta property="og:title" content="Invitación Especial: Cumpleaños de Olga Lucia">
   <meta property="og:description" content="Acompáñanos el Sábado, 18 de Abril.">
   <meta property="og:image" content="https://miguelhito54.github.io/olgatarjeta50/invitacion.jpeg">
-  <meta property="og:url" content="https://miguelhito54.github.io/olgatarjeta50/">
+  <meta property="og:url" content="https://miguelhito54.github.io/olgatarjeta50">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
   <style>
@@ -528,13 +528,18 @@
   function startAudio() {
     if (audioStarted) return;
     audioStarted = true;
-    audio.play().catch(function() {});
+    var p = audio.play();
+    if (p !== undefined) {
+      p.catch(function() { audioStarted = false; });
+    }
   }
 
-  document.addEventListener('pointerdown', function handler() {
-    startAudio();
-    document.removeEventListener('pointerdown', handler);
-  }, { passive: true });
+  ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(function(ev) {
+    document.addEventListener(ev, function handler() {
+      if (!audioStarted) startAudio();
+      if (audioStarted) document.removeEventListener(ev, handler);
+    }, { passive: true });
+  });
 
   function toggleMusic() {
     isMuted = !isMuted;
