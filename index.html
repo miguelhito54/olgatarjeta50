@@ -230,10 +230,20 @@
   </svg>
 </button>
 
-<iframe id="yt-player"
-  src="https://www.youtube.com/embed/8-eNdHn9uRE?autoplay=1&mute=0&loop=1&playlist=8-eNdHn9uRE&controls=0&enablejsapi=1&rel=0"
-  allow="autoplay; encrypted-media" allowfullscreen>
-</iframe>
+<div id="yt-player" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;"></div>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+  var ytPlayer;
+  function onYouTubeIframeAPIReady() {
+    ytPlayer = new YT.Player('yt-player', {
+      videoId: '8-eNdHn9uRE',
+      playerVars: { autoplay: 1, loop: 1, playlist: '8-eNdHn9uRE', controls: 0, mute: 0 },
+      events: {
+        onReady: function(e) { e.target.setVolume(50); }
+      }
+    });
+  }
+</script>
 
 <div class="progress-bar-wrap">
   <div class="progress-bar" id="pbar"></div>
@@ -529,18 +539,18 @@
   const iconOff = document.getElementById('icon-off');
   let isMuted = false, audioStarted = false;
 
-  function sendYT(fn, args) {
-    try { player.contentWindow.postMessage(JSON.stringify({ event: 'command', func: fn, args: args || [] }), '*'); }
-    catch(e) {}
-  }
+ function toggleMusic() {
+  isMuted = !isMuted;
+  if (ytPlayer) isMuted ? ytPlayer.mute() : ytPlayer.unMute();
+  iconOn.style.display  = isMuted ? 'none'  : 'block';
+  iconOff.style.display = isMuted ? 'block' : 'none';
+}
 
   function startAudio() {
-    if (audioStarted) return;
-    audioStarted = true;
-    sendYT('unMute');
-    sendYT('setVolume', [35]);
-    sendYT('playVideo');
-  }
+  if (audioStarted) return;
+  audioStarted = true;
+  if (ytPlayer) { ytPlayer.unMute(); ytPlayer.setVolume(50); ytPlayer.playVideo(); }
+}
 
   document.addEventListener('pointerdown', startAudio, { once: true, passive: true });
   document.addEventListener('touchstart',  startAudio, { once: true, passive: true });
