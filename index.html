@@ -466,58 +466,44 @@
 </a>
 
 <script>
-  /* ── PAGES ── */
-  let cur = 0, animating = false;
-  const PAGES   = ['page1','page2','page3'].map(id => document.getElementById(id));
-  const DOTS    = ['d0','d1','d2'].map(id => document.getElementById(id));
-  const btnPrev = document.getElementById('btn-prev');
-  const btnNext = document.getElementById('btn-next');
-  const pbar    = document.getElementById('pbar');
-  const DURATION = 12000;
+ /* ── PAGES ── */
+let cur = 0, animating = false;
+const PAGES   = ['page1','page2','page3'].map(id => document.getElementById(id));
+const DOTS    = ['d0','d1','d2'].map(id => document.getElementById(id));
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+const pbar    = document.getElementById('pbar');
+const DURATION = 12000;
 
-  function render() {
-    DOTS.forEach((d, i) => d.classList.toggle('on', i === cur));
-    btnPrev.disabled = cur === 0;
-    btnNext.disabled = cur === PAGES.length - 1;
-  }
+function render() {
+  DOTS.forEach((d, i) => d.classList.toggle('on', i === cur));
+  btnPrev.disabled = cur === 0;
+  btnNext.disabled = cur === PAGES.length - 1;
 
-  function goTo(n) {
-    if (animating) return;
-    animating = true;
-    if (n > cur) {
-      PAGES[cur].classList.add('turned');
+  PAGES.forEach((p, i) => {
+    if (i < cur) {
+      p.classList.add('turned');
+      p.style.zIndex = 10 - i;
+    } else if (i === cur) {
+      p.classList.remove('turned');
+      p.style.zIndex = 30 - i;
     } else {
-      PAGES[n].classList.remove('turned');
+      p.classList.remove('turned');
+      p.style.zIndex = 20 - i;
     }
-    cur = n;
-    render();
-    setTimeout(() => { animating = false; }, 950);
-  }
+  });
+}
 
-  function nextPage() { if (cur < PAGES.length - 1) goTo(cur + 1); }
-  function prevPage() { if (cur > 0) goTo(cur - 1); }
+function goTo(n) {
+  if (animating) return;
+  animating = true;
+  cur = n;
+  render();
+  setTimeout(() => { animating = false; }, 950);
+}
 
-  let autoTimer = null;
-  function startAuto() {
-    clearAuto();
-    pbar.style.transition = 'none';
-    pbar.style.width = '0%';
-    pbar.offsetWidth;
-    pbar.style.transition = `width ${DURATION}ms linear`;
-    pbar.style.width = '100%';
-    autoTimer = setTimeout(() => {
-      if (cur < PAGES.length - 1) { nextPage(); startAuto(); }
-      else { setTimeout(() => { goTo(0); startAuto(); }, 1200); }
-    }, DURATION);
-  }
-  function clearAuto() {
-    clearTimeout(autoTimer);
-    pbar.style.transition = 'none';
-    pbar.style.width = '0%';
-  }
-  function manualNext() { clearAuto(); nextPage(); startAuto(); }
-  function manualPrev() { clearAuto(); prevPage(); startAuto(); }
-  window.addEventListener('load', () => setTimeout(startAuto, 900));
+function nextPage() { if (cur < PAGES.length - 1) goTo(cur + 1); }
+function prevPage() { if (cur > 0) goTo(cur - 1); }
 
   /* ── SWIPE ── */
   const book = document.getElementById('book');
