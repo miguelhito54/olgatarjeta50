@@ -471,12 +471,10 @@
   function goTo(n) {
     if (animating) return;
     animating = true;
-    if (n > cur) {
-      PAGES[cur].classList.add('turned');
-    } else {
-      PAGES[n].classList.remove('turned');
-    }
     cur = n;
+    PAGES.forEach((page, i) => {
+      page.classList.toggle('turned', i < cur);
+    });
     render();
     setTimeout(() => { animating = false; }, 950);
   }
